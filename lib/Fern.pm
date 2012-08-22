@@ -5,7 +5,8 @@ use Scalar::Util (qw(blessed));
 
 use overload
     '""' => sub { return $_[0]->{text} },
-    'eq' => sub { return $_[0] . '' eq $_[1] . '' };
+    'eq' => sub { return $_[0] . '' eq $_[1] . '' },
+    'ne' => sub { return $_[0] . '' ne $_[1] . '' };
 
 sub new {
     my $class = shift;
