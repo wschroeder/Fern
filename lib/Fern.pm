@@ -18,10 +18,18 @@ sub new {
     return bless($self, __PACKAGE__);
 }
 
+sub __make_custom_tag {
+    my $self = shift;
+    my $tag_name = shift;
+    my $code_ref = shift;
+    $self->{tags}->{$tag_name} = $code_ref;
+    return $self;
+}
+
 sub __make_solo_tag {
     my $self = shift;
     my $tag_name = shift;
-    $self->{tags}->{$tag_name} = sub {
+    $self->__make_custom_tag($tag_name, sub {
         my $self = shift;
         my $attribute_hash = shift;
         my @content = @_;
@@ -36,8 +44,7 @@ sub __make_solo_tag {
                (keys %$attribute_hash ? ' ' . join(' ', map { $_ . '="' . $attribute_hash->{$_} . '"' } keys %$attribute_hash) : '') .
                (@content ? ">" : " />") .
                (@content ? join('', @content) . "</$tag_name>" : ''));
-    };
-
+    });
     return $self;
 }
 

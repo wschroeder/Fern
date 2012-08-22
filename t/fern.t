@@ -126,12 +126,11 @@ is($t->foo(), '<foo></foo>', 'foo tag (not solo)');
 $t->__make_solo_tag('bar');
 is($t->bar(), '<bar />', 'bar tag (solo)');
 
-package Fern;
-sub template {
-    my ($class, $obj, $p1, $p2) = @_;
-    return $class->span('Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')');
-}
-package main;
+$t->__make_custom_tag('template', sub {
+    my ($self, $obj, $p1, $p2) = @_;
+    return $self->span('Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')');
+});
+
 is($t->template({class => 'this-class'}, 3, 'test'), '<span>Class (this-class) and Param 1 (3) and Param 2 (test)</span>', 'Custom template');
 
 is($t->div('bar')->template({class => 'foo'}, 'this', 'that')->bar(), '<div>bar</div><span>Class (foo) and Param 1 (this) and Param 2 (that)</span><bar />', 'Custom template plays nicely in chain');
