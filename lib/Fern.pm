@@ -39,6 +39,10 @@ sub AUTOLOAD {
 package Fern;
 use strict;
 use warnings;
+use vars (qw(@ISA @EXPORT_OK));
+require Exporter;
+@ISA = (qw( Exporter ));
+@EXPORT_OK = (qw( make_solo_tag make_custom_tag ));
 
 sub new {
     my ($class, $xml_space) = @_;
@@ -70,7 +74,7 @@ sub new_tag {
 
 sub make_custom_tag {
     my $class = shift;
-    my $tag_obj = shift;
+    my $tag_obj = ref($class) ? $class : shift;
     my $tag_name = shift;
     my $code_ref = shift;
     $tag_obj->{tags}->{$tag_name} = $code_ref;
@@ -79,7 +83,7 @@ sub make_custom_tag {
 
 sub make_solo_tag {
     my $class = shift;
-    my $tag_obj = shift;
+    my $tag_obj = ref($class) ? $class : shift;
     my $tag_name = shift;
     Fern->make_custom_tag($tag_obj, $tag_name, sub {
         my $tag_obj = shift;
