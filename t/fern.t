@@ -20,9 +20,6 @@ for my $tag_name (qw(
     br
     hr
     input
-    new
-    make_solo_tag
-    make_custom_tag
 ))
 {
     is(Fern->make_solo_tag($t, $tag_name)->$tag_name(), '<' . $tag_name . ' />', "Solo $tag_name");
