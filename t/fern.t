@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::Most;
-use Fern (qw(make_solo_tag));
+use Fern;
 
 my $t = Fern->new();
 
@@ -25,7 +25,7 @@ for my $tag_name (qw(
     make_custom_tag
 ))
 {
-    is(Fern::make_solo_tag($t, $tag_name)->$tag_name(), '<' . $tag_name . ' />', "Solo $tag_name");
+    is(Fern->make_solo_tag($t, $tag_name)->$tag_name(), '<' . $tag_name . ' />', "Solo $tag_name");
 }
 
 $t = Fern->new();
@@ -160,10 +160,7 @@ is($t->foo(), '<foo></foo>', 'foo tag (not solo)');
 Fern->make_solo_tag($t, 'bar');
 is($t->bar(), '<bar />', 'bar tag (solo)');
 
-make_solo_tag($t, 'zap');
-is($t->zap(), '<zap />', 'zap tag (solo)');
-
-Fern::make_custom_tag($t, 'template', sub {
+Fern->make_custom_tag($t, 'template', sub {
     my ($self, $obj, $p1, $p2) = @_;
     return $self->span('Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')');
 });
