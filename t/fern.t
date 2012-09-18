@@ -3,7 +3,7 @@ use warnings;
 use Test::Most;
 use Fern;
 
-my $t = Fern->new();
+my $t = new Fern();
 
 is(defined($t) ? 1 : 0, 1, 'We created the toplevel Fern object');
 
@@ -13,38 +13,7 @@ for my $tag_name (qw(
     input
 ))
 {
-    is($t->$tag_name(), "<$tag_name></$tag_name>", "Non-solo $tag_name");
-}
-
-for my $tag_name (qw(
-    br
-    hr
-    input
-))
-{
-    is(Fern->make_solo_tag($t, $tag_name)->$tag_name(), '<' . $tag_name . ' />', "Solo $tag_name");
-}
-
-$t = Fern->new();
-
-for my $tag_name (qw(
-    br
-    hr
-    input
-))
-{
-    is($t->$tag_name(), "<$tag_name></$tag_name>", "Non-solo $tag_name again");
-}
-
-$t = Fern->new('xhtml');
-
-for my $tag_name (qw(
-    br
-    hr
-    input
-))
-{
-    is($t->$tag_name(), '<' . $tag_name . ' />', "Solo $tag_name again");
+    is($t->__make_solo_tag($tag_name)->$tag_name(), '<' . $tag_name . ' />', $tag_name);
 }
 
 for my $tag_name (qw(
@@ -154,10 +123,10 @@ like($got, qr{$expected}, 'Complex example');
 
 is($t->foo(), '<foo></foo>', 'foo tag (not solo)');
 
-Fern->make_solo_tag($t, 'bar');
+$t->__make_solo_tag('bar');
 is($t->bar(), '<bar />', 'bar tag (solo)');
 
-Fern->make_custom_tag($t, 'template', sub {
+$t->__make_custom_tag('template', sub {
     my ($self, $obj, $p1, $p2) = @_;
     return $self->span('Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')');
 });
