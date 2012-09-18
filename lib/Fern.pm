@@ -2,13 +2,15 @@ package Fern;
 use strict;
 use warnings;
 use Scalar::Util (qw(blessed));
+use base qw(Exporter);
+our @EXPORT = qw($new $make_custom_tag $make_solo_tag);
 
 use overload
     '""' => sub { return $_[0]->{text} },
     'eq' => sub { return $_[0] . '' eq $_[1] . '' },
     'ne' => sub { return $_[0] . '' ne $_[1] . '' };
 
-sub new {
+our $new = sub {
     my $class = shift;
     my $text = shift;
     my $self = ref($class) ? { %$class } : {text => '', tags => {}};
@@ -16,20 +18,20 @@ sub new {
         $self->{text} .= $text;
     }
     return bless($self, __PACKAGE__);
-}
+};
 
-sub __make_custom_tag {
+our $make_custom_tag = sub {
     my $self = shift;
     my $tag_name = shift;
     my $code_ref = shift;
     $self->{tags}->{$tag_name} = $code_ref;
     return $self;
-}
+};
 
-sub __make_solo_tag {
+our $make_solo_tag = sub {
     my $self = shift;
     my $tag_name = shift;
-    $self->__make_custom_tag($tag_name, sub {
+    $self->$make_custom_tag($tag_name, sub {
         my $self = shift;
         my $attribute_hash = shift;
         my @content = @_;
@@ -40,13 +42,13 @@ sub __make_solo_tag {
             $attribute_hash = {};
         }
 
-        return $self->new("<$tag_name" .
+        return $self->$new("<$tag_name" .
                (keys %$attribute_hash ? ' ' . join(' ', map { $_ . '="' . $attribute_hash->{$_} . '"' } keys %$attribute_hash) : '') .
                (@content ? ">" : " />") .
                (@content ? join('', @content) . "</$tag_name>" : ''));
     });
     return $self;
-}
+};
 
 our $AUTOLOAD;
 sub AUTOLOAD {
@@ -69,7 +71,7 @@ sub AUTOLOAD {
         $attribute_hash = {};
     }
 
-    return $self->new("<$name" .
+    return $self->$new("<$name" .
            (keys %$attribute_hash ? ' ' . join(' ', map { $_ . '="' . $attribute_hash->{$_} . '"' } keys %$attribute_hash) : '') .
            ">" .
            (@content ? join('', @content) : '') .

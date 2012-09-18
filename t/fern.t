@@ -3,7 +3,7 @@ use warnings;
 use Test::Most;
 use Fern;
 
-my $t = new Fern();
+my $t = Fern->$new();
 
 is(defined($t) ? 1 : 0, 1, 'We created the toplevel Fern object');
 
@@ -13,7 +13,7 @@ for my $tag_name (qw(
     input
 ))
 {
-    is($t->__make_solo_tag($tag_name)->$tag_name(), '<' . $tag_name . ' />', $tag_name);
+    is($t->$make_solo_tag($tag_name)->$tag_name(), '<' . $tag_name . ' />', $tag_name);
 }
 
 for my $tag_name (qw(
@@ -123,10 +123,10 @@ like($got, qr{$expected}, 'Complex example');
 
 is($t->foo(), '<foo></foo>', 'foo tag (not solo)');
 
-$t->__make_solo_tag('bar');
+$t->$make_solo_tag('bar');
 is($t->bar(), '<bar />', 'bar tag (solo)');
 
-$t->__make_custom_tag('template', sub {
+$t->$make_custom_tag('template', sub {
     my ($self, $obj, $p1, $p2) = @_;
     return $self->span('Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')');
 });
