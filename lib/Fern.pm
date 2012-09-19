@@ -50,18 +50,9 @@ our $make_solo_tag = sub {
     return $self;
 };
 
-our $AUTOLOAD;
-sub AUTOLOAD {
-    my $self = shift;
-    my $name = $AUTOLOAD;
-    $name =~ s/.*://;   # strip fully-qualified portion
-
-    return if $name eq 'DESTROY';
-
-    if ($self->{tags}->{$name}) {
-        return $self->{tags}->{$name}->($self, @_);
-    }
-
+our $build_tag = sub {
+    my $self           = shift;
+    my $name           = shift;
     my $attribute_hash = shift;
     my @content = @_;
     if (!ref($attribute_hash) || ref($attribute_hash) ne 'HASH') {
@@ -76,6 +67,23 @@ sub AUTOLOAD {
            ">" .
            (@content ? join('', @content) : '') .
            "</$name>");
+};
+
+*VERSION = sub { shift->$build_tag('VERSION', @_) };
+
+our $AUTOLOAD;
+sub AUTOLOAD {
+    my $self = shift;
+    my $name = $AUTOLOAD;
+    $name =~ s/.*://;   # strip fully-qualified portion
+
+    return if $name eq 'DESTROY';
+
+    if ($self->{tags}->{$name}) {
+        return $self->{tags}->{$name}->($self, @_);
+    }
+
+    return $self->$build_tag($name, @_);
 }
 
 1;

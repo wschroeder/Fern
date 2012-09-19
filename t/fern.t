@@ -138,5 +138,7 @@ is($t->div('bar')->template({class => 'foo'}, 'this', 'that')->bar(), '<div>bar<
 is($t->div(1 == 1 ? $t->div() : $t->span()), '<div><div></div></div>', 'Dynamic tag tree 1');
 is($t->div(1 == 0 ? $t->div() : $t->span()), '<div><span></span></div>', 'Dynamic tag tree 2');
 
+is($t->VERSION, '<VERSION></VERSION>', 'special perl name "VERSION" works');
+
 done_testing;
 
