@@ -1,11 +1,7 @@
 use strict;
 use warnings;
 use Test::Most;
-use Fern;
-
-my $t = Fern->$new();
-
-is(defined($t) ? 1 : 0, 1, 'We created the toplevel Fern object');
+use Fern qw(tag empty_element_tag);
 
 for my $tag_name (qw(
     br
@@ -13,7 +9,7 @@ for my $tag_name (qw(
     input
 ))
 {
-    is($t->$make_solo_tag($tag_name)->$tag_name(), '<' . $tag_name . ' />', $tag_name);
+    is(empty_element_tag($tag_name)->(), '<' . $tag_name . ' />', $tag_name);
 }
 
 for my $tag_name (qw(
@@ -93,52 +89,57 @@ for my $tag_name (qw(
     var
 ))
 {
-    is($t->$tag_name(), '<' . $tag_name . '></' . $tag_name . '>', $tag_name);
+    is(tag($tag_name)->(), '<' . $tag_name . '></' . $tag_name . '>', $tag_name);
 }
 
-is($t->div('foo')->div('bar'), '<div>foo</div><div>bar</div>', 'Chaining');
-is($t->div({random => 'lala'}), '<div random="lala"></div>', 'Attributes');
-is($t->div({class => 'foo'}, $t->div({class => 'bar'}, $t->div())), '<div class="foo"><div class="bar"><div></div></div></div>', 'Containment');
+is(tag('div', {random => 'lala'})->(), '<div random="lala"></div>', 'Attributes');
+is(tag('div', {class => 'foo'}, tag('div', {class => 'bar'}, tag('div')))->(), '<div class="foo"><div class="bar"><div></div></div></div>', 'Containment');
 
 my $got =
-    $t->div({class => 'modal hide fade imp-error-modal'},
-        $t->div({class => 'modal-header'},
-            $t->button({type => 'button', class => 'close', 'data-dismiss' => 'modal'}, '×')
-              ->h3('A JavaScript error has occurred'))
-          ->div({class => 'modal-body'},
-            $t->p("Please click the &quot;Open RT&quot; button to open an RT window and submit the error.",
-                "Add to the ticket how we can reproduce this error.")
-              ->h4('Error Info')
-              ->pre('info'))
-          ->div({class => 'modal-footer'},
-            $t->a({href => '#', class => 'btn', 'data-dismiss' => 'modal'},
-                'Ignore')
-              ->a({href => '#', class => 'btn btn-primary'},
-                'Open RT')))
+    tag('div', {class => 'modal hide fade imp-error-modal'},
+        tag('div', {class => 'modal-header'},
+            tag('button', {type => 'button', class => 'close', 'data-dismiss' => 'modal'}, '×'),
+              tag('h3', 'A JavaScript error has occurred')),
+          tag('div', {class => 'modal-body'},
+            tag('p', "Please click the &quot;Open RT&quot; button to open an RT window and submit the error.",
+                "Add to the ticket how we can reproduce this error."),
+              tag('h4', 'Error Info'),
+              tag('pre', 'info')),
+          tag('div', {class => 'modal-footer'},
+            tag('a', {href => '#', class => 'btn', 'data-dismiss' => 'modal'},
+                'Ignore'),
+              tag('a', {href => '#', class => 'btn btn-primary'},
+                'Open RT')))->()
     ;
 
 my $expected = '<div class="modal hide fade imp-error-modal"><div class="modal-header"><button .*>×</button><h3>A JavaScript error has occurred</h3></div><div class="modal-body"><p>Please click the &quot;Open RT&quot; button to open an RT window and submit the error.Add to the ticket how we can reproduce this error.</p><h4>Error Info</h4><pre>info</pre></div><div class="modal-footer"><a .*>Ignore</a><a .*>Open RT</a></div></div>';
 
 like($got, qr{$expected}, 'Complex example');
 
-is($t->foo(), '<foo></foo>', 'foo tag (not solo)');
+is(tag('foo')->(), '<foo></foo>', 'foo tag (not empty-element tag)');
+is(empty_element_tag('bar')->(), '<bar />', 'bar tag (empty-element tag)');
 
-$t->$make_solo_tag('bar');
-is($t->bar(), '<bar />', 'bar tag (solo)');
+sub custom_tag {
+    my ($obj, $p1, $p2) = @_;
+    return sub {
+        return tag('span', 'Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')')->();
+    };
+}
 
-$t->$make_custom_tag('template', sub {
-    my ($self, $obj, $p1, $p2) = @_;
-    return $self->span('Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')');
-});
+is(
+    tag('div', custom_tag({class => 'this-class'}, 3, 'test'))->(),
+    '<div><span>Class (this-class) and Param 1 (3) and Param 2 (test)</span></div>',
+    'Custom tag',
+);
 
-is($t->template({class => 'this-class'}, 3, 'test'), '<span>Class (this-class) and Param 1 (3) and Param 2 (test)</span>', 'Custom template');
+is(tag('div', (1 == 1 ? tag('div') : tag('span')))->(), '<div><div></div></div>', 'Dynamic tag tree 1');
+is(tag('div', (1 == 0 ? tag('div') : tag('span')))->(), '<div><span></span></div>', 'Dynamic tag tree 2');
 
-is($t->div('bar')->template({class => 'foo'}, 'this', 'that')->bar(), '<div>bar</div><span>Class (foo) and Param 1 (this) and Param 2 (that)</span><bar />', 'Custom template plays nicely in chain');
+my $template1 = tag('div', tag('span', sub { $_[0] } ), tag('span', sub { $_[1] }));
+is($template1->('Hello', 'World'), '<div><span>Hello</span><span>World</span></div>', 'Parameter passing in content');
 
-is($t->div(1 == 1 ? $t->div() : $t->span()), '<div><div></div></div>', 'Dynamic tag tree 1');
-is($t->div(1 == 0 ? $t->div() : $t->span()), '<div><span></span></div>', 'Dynamic tag tree 2');
-
-is($t->VERSION, '<VERSION></VERSION>', 'special perl name "VERSION" works');
+my $template2 = empty_element_tag('div', { fruit => sub { $_[0] } });
+is($template2->('apple', 'number'), '<div fruit="apple" />', 'Parameter passing in tags');
 
 done_testing;
 

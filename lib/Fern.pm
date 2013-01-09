@@ -3,58 +3,12 @@ use strict;
 use warnings;
 use Scalar::Util (qw(blessed));
 use base qw(Exporter);
-our @EXPORT = qw($new $make_custom_tag $make_solo_tag);
+our @EXPORT = qw(tag empty_element_tag);
 
-use overload
-    '""' => sub { return $_[0]->{text} },
-    'eq' => sub { return $_[0] . '' eq $_[1] . '' },
-    'ne' => sub { return $_[0] . '' ne $_[1] . '' };
-
-our $new = sub {
-    my $class = shift;
-    my $text = shift;
-    my $self = ref($class) ? { %$class } : {text => '', tags => {}};
-    if (defined($text)) {
-        $self->{text} .= $text;
-    }
-    return bless($self, __PACKAGE__);
-};
-
-our $make_custom_tag = sub {
-    my $self = shift;
-    my $tag_name = shift;
-    my $code_ref = shift;
-    $self->{tags}->{$tag_name} = $code_ref;
-    return $self;
-};
-
-our $make_solo_tag = sub {
-    my $self = shift;
-    my $tag_name = shift;
-    $self->$make_custom_tag($tag_name, sub {
-        my $self = shift;
-        my $attribute_hash = shift;
-        my @content = @_;
-        if (!ref($attribute_hash) || ref($attribute_hash) ne 'HASH') {
-            if ($attribute_hash) {
-                unshift @content, $attribute_hash;
-            }
-            $attribute_hash = {};
-        }
-
-        return $self->$new("<$tag_name" .
-               (keys %$attribute_hash ? ' ' . join(' ', map { $_ . '="' . $attribute_hash->{$_} . '"' } keys %$attribute_hash) : '') .
-               (@content ? ">" : " />") .
-               (@content ? join('', @content) . "</$tag_name>" : ''));
-    });
-    return $self;
-};
-
-our $build_tag = sub {
-    my $self           = shift;
-    my $name           = shift;
+sub _parse_attributes_and_content {
     my $attribute_hash = shift;
     my @content = @_;
+
     if (!ref($attribute_hash) || ref($attribute_hash) ne 'HASH') {
         if ($attribute_hash) {
             unshift @content, $attribute_hash;
@@ -62,28 +16,54 @@ our $build_tag = sub {
         $attribute_hash = {};
     }
 
-    return $self->$new("<$name" .
-           (keys %$attribute_hash ? ' ' . join(' ', map { $_ . '="' . $attribute_hash->{$_} . '"' } keys %$attribute_hash) : '') .
-           ">" .
-           (@content ? join('', @content) : '') .
-           "</$name>");
-};
+    return ($attribute_hash, @content);
+}
 
-*VERSION = sub { shift->$build_tag('VERSION', @_) };
+sub _stringify_atom {
+    my ($atom, @params) = @_;
+    return ref($atom) && ref($atom) eq 'CODE' ? $atom->(@params) : $atom;
+}
 
-our $AUTOLOAD;
-sub AUTOLOAD {
-    my $self = shift;
-    my $name = $AUTOLOAD;
-    $name =~ s/.*://;   # strip fully-qualified portion
+sub _stringify_key_value_pair {
+    my ($key, $value, @params) = @_;
+    return $key . '="' . _stringify_atom($value, @params) . '"';
+}
 
-    return if $name eq 'DESTROY';
+sub _stringify_attribute_hash {
+    my ($attribute_hash, @params) = @_;
+    return '' if (!keys %$attribute_hash);
+    return ' ' . join(' ', map { _stringify_key_value_pair($_, $attribute_hash->{$_}, @params) } keys %$attribute_hash);
+}
 
-    if ($self->{tags}->{$name}) {
-        return $self->{tags}->{$name}->($self, @_);
-    }
+sub _stringify_content {
+    my ($content, @params) = @_;
+    return (@$content ? join('', map {_stringify_atom($_, @params)} @$content) : '');
+}
 
-    return $self->$build_tag($name, @_);
+sub empty_element_tag {
+    my $tag_name       = shift;
+    my ($attribute_hash, @content) = _parse_attributes_and_content(@_);
+
+    return sub {
+        my $stringified_content = _stringify_content(\@content, @_);
+        if ($stringified_content) {
+            "<$tag_name" .  _stringify_attribute_hash($attribute_hash, @_) .  ">$stringified_content</$tag_name>";
+        }
+        else {
+            "<$tag_name" .  _stringify_attribute_hash($attribute_hash, @_) .  " />";
+        }
+    };
+}
+
+sub tag {
+    my $tag_name       = shift;
+    my ($attribute_hash, @content) = _parse_attributes_and_content(@_);
+
+    return sub {
+        "<$tag_name" .  _stringify_attribute_hash($attribute_hash, @_) .  ">" .
+        _stringify_content(\@content, @_) .
+        "</$tag_name>"
+    };
 }
 
 1;
