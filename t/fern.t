@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::Most;
-use Fern qw(tag empty_element_tag);
+use Fern qw(tag empty_element_tag render_tag_atom);
 
 for my $tag_name (qw(
     br
@@ -117,12 +117,13 @@ my $expected = '<div class="modal hide fade imp-error-modal"><div class="modal-h
 like($got, qr{$expected}, 'Complex example');
 
 is(tag('foo')->(), '<foo></foo>', 'foo tag (not empty-element tag)');
+is(render_tag_atom(tag('foo')), '<foo></foo>', 'foo tag (using render_tag_atom)');
 is(empty_element_tag('bar')->(), '<bar />', 'bar tag (empty-element tag)');
 
 sub custom_tag {
     my ($obj, $p1, $p2) = @_;
     return sub {
-        return tag('span', 'Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')')->();
+        return render_tag_atom(tag('span', 'Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')'), @_);
     };
 }
 

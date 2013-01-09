@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Scalar::Util (qw(blessed));
 use base qw(Exporter);
-our @EXPORT = qw(tag empty_element_tag);
+our @EXPORT = qw(tag empty_element_tag render_tag_atom);
 
 sub _parse_attributes_and_content {
     my $attribute_hash = shift;
@@ -19,14 +19,14 @@ sub _parse_attributes_and_content {
     return ($attribute_hash, @content);
 }
 
-sub _stringify_atom {
+sub render_tag_atom {
     my ($atom, @params) = @_;
     return ref($atom) && ref($atom) eq 'CODE' ? $atom->(@params) : $atom;
 }
 
 sub _stringify_key_value_pair {
     my ($key, $value, @params) = @_;
-    return $key . '="' . _stringify_atom($value, @params) . '"';
+    return $key . '="' . render_tag_atom($value, @params) . '"';
 }
 
 sub _stringify_attribute_hash {
@@ -37,7 +37,7 @@ sub _stringify_attribute_hash {
 
 sub _stringify_content {
     my ($content, @params) = @_;
-    return (@$content ? join('', map {_stringify_atom($_, @params)} @$content) : '');
+    return (@$content ? join('', map {render_tag_atom($_, @params)} @$content) : '');
 }
 
 sub empty_element_tag {
