@@ -94,6 +94,7 @@ for my $tag_name (qw(
 
 is(tag('div', {random => 'lala'})->(), '<div random="lala"></div>', 'Attributes');
 is(tag('div', {class => 'foo'}, tag('div', {class => 'bar'}, tag('div')))->(), '<div class="foo"><div class="bar"><div></div></div></div>', 'Containment');
+is(tag('div', [class => 'foo', name => 'foofoo'], 'Test')->(), '<div class="foo" name="foofoo">Test</div>', 'Ordered attributes');
 
 my $got =
     tag('div', {class => 'modal hide fade imp-error-modal'},
