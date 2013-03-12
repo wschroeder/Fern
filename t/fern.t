@@ -1,7 +1,8 @@
 use strict;
 use warnings;
 use Test::Most;
-use Fern qw(tag empty_element_tag render_tag_atom);
+use Test::Deep;
+use Fern qw(tag empty_element_tag render_tag);
 
 for my $tag_name (qw(
     br
@@ -9,7 +10,7 @@ for my $tag_name (qw(
     input
 ))
 {
-    is(empty_element_tag($tag_name)->(), '<' . $tag_name . ' />', $tag_name);
+    is_deeply([empty_element_tag($tag_name)->()], ['<' . $tag_name . ' />'], $tag_name);
 }
 
 for my $tag_name (qw(
@@ -89,14 +90,14 @@ for my $tag_name (qw(
     var
 ))
 {
-    is(tag($tag_name)->(), '<' . $tag_name . '></' . $tag_name . '>', $tag_name);
+    is(render_tag(tag($tag_name)), '<' . $tag_name . '></' . $tag_name . '>', $tag_name);
 }
 
-is(tag('div', {random => 'lala'})->(), '<div random="lala"></div>', 'Attributes');
-is(tag('div', {class => 'foo'}, tag('div', {class => 'bar'}, tag('div')))->(), '<div class="foo"><div class="bar"><div></div></div></div>', 'Containment');
-is(tag('div', [class => 'foo', name => 'foofoo'], 'Test')->(), '<div class="foo" name="foofoo">Test</div>', 'Ordered attributes');
+is(render_tag(tag('div', {random => 'lala'})), '<div random="lala"></div>', 'Attributes');
+is(render_tag(tag('div', {class => 'foo'}, tag('div', {class => 'bar'}, tag('div')))), '<div class="foo"><div class="bar"><div></div></div></div>', 'Containment');
+is(render_tag(tag('div', [class => 'foo', name => 'foofoo'], 'Test')), '<div class="foo" name="foofoo">Test</div>', 'Ordered attributes');
 
-my $got =
+my $got = render_tag(
     tag('div', {class => 'modal hide fade imp-error-modal'},
         tag('div', {class => 'modal-header'},
             tag('button', {type => 'button', class => 'close', 'data-dismiss' => 'modal'}, '×'),
@@ -110,38 +111,40 @@ my $got =
             tag('a', {href => '#', class => 'btn', 'data-dismiss' => 'modal'},
                 'Ignore'),
               tag('a', {href => '#', class => 'btn btn-primary'},
-                'Open RT')))->()
-    ;
+                'Open RT')))
+);
 
 my $expected = '<div class="modal hide fade imp-error-modal"><div class="modal-header"><button .*>×</button><h3>A JavaScript error has occurred</h3></div><div class="modal-body"><p>Please click the &quot;Open RT&quot; button to open an RT window and submit the error.Add to the ticket how we can reproduce this error.</p><h4>Error Info</h4><pre>info</pre></div><div class="modal-footer"><a .*>Ignore</a><a .*>Open RT</a></div></div>';
 
 like($got, qr{$expected}, 'Complex example');
 
-is(tag('foo')->(), '<foo></foo>', 'foo tag (not empty-element tag)');
-is(render_tag_atom(tag('foo')), '<foo></foo>', 'foo tag (using render_tag_atom)');
-is(empty_element_tag('bar')->(), '<bar />', 'bar tag (empty-element tag)');
+is(render_tag(tag('foo')), '<foo></foo>', 'foo tag (not empty-element tag)');
+is(render_tag(tag('foo')), '<foo></foo>', 'foo tag (using render_tag)');
+is(render_tag(empty_element_tag('bar')), '<bar />', 'bar tag (empty-element tag)');
 
 sub custom_tag {
     my ($obj, $p1, $p2) = @_;
     return sub {
-        return render_tag_atom(tag('span', 'Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')'), @_);
+        return (render_tag(tag('span', 'Class (' . $obj->{class} . ') and Param 1 (' . $p1 . ') and Param 2 (' . $p2 . ')'), @_), {metadata => 5});
     };
 }
 
+my $custom_tag_instance = tag('div', custom_tag({class => 'this-class'}, 3, 'test'));
 is(
-    tag('div', custom_tag({class => 'this-class'}, 3, 'test'))->(),
+    render_tag($custom_tag_instance),
     '<div><span>Class (this-class) and Param 1 (3) and Param 2 (test)</span></div>',
     'Custom tag',
 );
+is(($custom_tag_instance->())[1]->{metadata}, 5, 'Metadata');
 
-is(tag('div', (1 == 1 ? tag('div') : tag('span')))->(), '<div><div></div></div>', 'Dynamic tag tree 1');
-is(tag('div', (1 == 0 ? tag('div') : tag('span')))->(), '<div><span></span></div>', 'Dynamic tag tree 2');
+is(render_tag(tag('div', (1 == 1 ? tag('div') : tag('span')))), '<div><div></div></div>', 'Dynamic tag tree 1');
+is(render_tag(tag('div', (1 == 0 ? tag('div') : tag('span')))), '<div><span></span></div>', 'Dynamic tag tree 2');
 
 my $template1 = tag('div', tag('span', sub { $_[0] } ), tag('span', sub { $_[1] }));
-is($template1->('Hello', 'World'), '<div><span>Hello</span><span>World</span></div>', 'Parameter passing in content');
+is(($template1->('Hello', 'World'))[0], '<div><span>Hello</span><span>World</span></div>', 'Parameter passing in content');
 
 my $template2 = empty_element_tag('div', { fruit => sub { $_[0] } });
-is($template2->('apple', 'number'), '<div fruit="apple" />', 'Parameter passing in tags');
+is(($template2->('apple', 'number'))[0], '<div fruit="apple" />', 'Parameter passing in tags');
 
 done_testing;
 
