@@ -129,13 +129,13 @@ sub custom_tag {
     };
 }
 
-my $custom_tag_instance = tag('div', custom_tag({class => 'this-class'}, 3, 'test'));
+my $custom_tag_function = tag('div', custom_tag({class => 'this-class'}, 3, 'test'));
 is(
-    render_tag($custom_tag_instance),
+    render_tag($custom_tag_function),
     '<div><span>Class (this-class) and Param 1 (3) and Param 2 (test)</span></div>',
     'Custom tag',
 );
-is(($custom_tag_instance->())[1]->{metadata}, 5, 'Metadata');
+is(($custom_tag_function->())[1]->{metadata}, 5, 'Metadata');
 
 is(render_tag(tag('div', (1 == 1 ? tag('div') : tag('span')))), '<div><div></div></div>', 'Dynamic tag tree 1');
 is(render_tag(tag('div', (1 == 0 ? tag('div') : tag('span')))), '<div><span></span></div>', 'Dynamic tag tree 2');
