@@ -137,6 +137,14 @@ is(
 );
 is(($custom_tag_function->())[1]->{metadata}, 5, 'Metadata');
 
+{
+    my $tag_function = tag('div', tag('span', sub{ $_[0], 'apple' }, ' and ', sub { $_ [1], 'banana' }));
+    my ($xml, $m1, $m2) = $tag_function->('foo', 4);
+    is($xml, '<div><span>foo and 4</span></div>', 'Metadata-filled xml');
+    is($m1, 'apple', 'Metadata trickle 1');
+    is($m2, 'banana', 'Metadata trickle 2');
+}
+
 is(render_tag(tag('div', (1 == 1 ? tag('div') : tag('span')))), '<div><div></div></div>', 'Dynamic tag tree 1');
 is(render_tag(tag('div', (1 == 0 ? tag('div') : tag('span')))), '<div><span></span></div>', 'Dynamic tag tree 2');
 

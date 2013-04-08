@@ -60,12 +60,12 @@ sub _stringify_content {
     my @all_content = map { [render_tag_and_metadata($_, @params)] } @$content;
     return (
         @all_content ? join('', map {$_->[0]} @all_content) : '',
-        map {$_->[1]} @all_content,
+        map {@$_[1..$#$_]} @all_content,
     );
 }
 
 sub empty_element_tag {
-    my $tag_name       = shift;
+    my $tag_name = shift;
     my ($attributes, @content) = _parse_attributes_and_content(@_);
 
     return sub {
@@ -80,7 +80,7 @@ sub empty_element_tag {
 }
 
 sub tag {
-    my $tag_name       = shift;
+    my $tag_name = shift;
     my ($attributes, @content) = _parse_attributes_and_content(@_);
 
     return sub {
