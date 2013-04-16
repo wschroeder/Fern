@@ -391,5 +391,17 @@ example:
 
 =back
 
+=head1 AUTHOR
+
+Fern, the design specification and implementation, are creations of William
+Schroeder during work at The Genome Institute at Washington University School
+of Medicine (Richard K. Wilson, PI).
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (C) 2002-2013 Washington University in St. Louis, MO.
+
+This sofware is licensed under the same terms as Perl itself.
+
 =cut
 
