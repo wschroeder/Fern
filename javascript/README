@@ -1,0 +1,40 @@
+HOW TO USE FERN.JS
+------------------------------------------------------------------------------
+lib/Fern.js is not a proper node.js module.  It is intended to be used
+dominantly on web pages, where it is included like any other JavaScript file.
+To use it in a node.js project, you can use this approach:
+
+  eval(require('fs').readFileSync('lib/Fern.js', 'utf8'));
+
+
+HOW TO USE FERN
+------------------------------------------------------------------------------
+Edible documentation lives at the top of lib/Fern.js.
+
+
+HOW TO TEST
+------------------------------------------------------------------------------
+Install Buster.js:
+
+  npm install buster -g
+  npm link buster
+
+
+Run the tests:
+
+  buster test --reporter tap
+
+OR
+
+  node test/fern-test.js
+
+
+HOW TO DEBUG
+------------------------------------------------------------------------------
+Typical node.js debugging:
+
+  node debug test/fern-test.js
+
+
+The "debugger;" statement in debugged code is a software breakpoint.
+
