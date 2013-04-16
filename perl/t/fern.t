@@ -119,7 +119,6 @@ my $expected = '<div class="modal hide fade imp-error-modal"><div class="modal-h
 like($got, qr{$expected}, 'Complex example');
 
 is(render_tag(tag('foo')), '<foo></foo>', 'foo tag (not empty-element tag)');
-is(render_tag(tag('foo')), '<foo></foo>', 'foo tag (using render_tag)');
 is(render_tag(empty_element_tag('bar')), '<bar />', 'bar tag (empty-element tag)');
 
 sub custom_tag {
