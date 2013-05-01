@@ -9,7 +9,7 @@ sub _parse_attributes_and_content {
     my @content = @_;
 
     if (!ref($attributes) || (ref($attributes) ne 'HASH' && ref($attributes) ne 'ARRAY')) {
-        if ($attributes) {
+        if (defined $attributes) {
             unshift @content, $attributes;
         }
         $attributes = {};
