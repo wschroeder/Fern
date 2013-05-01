@@ -157,6 +157,13 @@ is(($template2->('apple', 'number'))[0], '<div fruit="apple" />', 'Parameter pas
     my $xml = render_tag( tag('TAXON_ID', 0) );
     is($xml, '<TAXON_ID>0</TAXON_ID>', 'zero is a value');
 }
+{
+    # I'm not sure if this is what it should do
+    # but this is what it currently does
+    # so somebody will notice if it changes
+    my $xml = render_tag( tag('TAXON_ID', '') );
+    is($xml, '<TAXON_ID></TAXON_ID>', 'empty string makes empty tag');
+}
 
 done_testing;
 
