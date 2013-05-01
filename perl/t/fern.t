@@ -153,5 +153,10 @@ is(($template1->('Hello', 'World'))[0], '<div><span>Hello</span><span>World</spa
 my $template2 = empty_element_tag('div', { fruit => sub { $_[0] } });
 is(($template2->('apple', 'number'))[0], '<div fruit="apple" />', 'Parameter passing in tags');
 
+{
+    my $xml = render_tag( tag('TAXON_ID', 0) );
+    is($xml, '<TAXON_ID>0</TAXON_ID>', 'zero is a value');
+}
+
 done_testing;
 
