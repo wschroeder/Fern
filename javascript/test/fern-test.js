@@ -147,6 +147,17 @@ buster.testCase("Fern", {
             template2('apple', 'number')[0],
             '<div fruit="apple" />'
         );
+    },
+    'Zero is a value': function () {
+        var xml = render_tag( tag('TAXON_ID', 0) );
+        assert.equals(xml, '<TAXON_ID>0</TAXON_ID>');
+    },
+    'Empty string makes empty tag': function () {
+        // I'm not sure if this is what it should do
+        // but this is what it currently does
+        // so somebody will notice if it changes
+        var xml = render_tag( tag('TAXON_ID', '') );
+        assert.equals(xml, '<TAXON_ID></TAXON_ID>');
     }
 });
 
