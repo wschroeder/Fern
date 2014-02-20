@@ -100,7 +100,7 @@ __END__
 
 =pod
 
-=head1 Fern
+=head1 NAME
 
 Fern - XML tree creator
 
